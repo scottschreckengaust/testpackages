@@ -19,13 +19,23 @@ jobs:
           echo "packages=$PACKAGES"
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
 
-  debugger:
+  debugger1:
     needs: [detect-packages]
     name: Debug
     runs-on: ubuntu-latest
     steps:
       - name: Value of outputs
         run: echo "${{ needs.detect-packages.outputs.packages }}"
+
+  debugger2:
+    needs: [debugger1, detect-packages]
+    if: ${{ needs.detect-packages.outputs.packages }} == '[]'
+    name: Debug2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Value of outputs
+        run: echo "${{ needs.detect-packages.outputs.packages }}"
+
 
   build:
     needs: [detect-packages]
