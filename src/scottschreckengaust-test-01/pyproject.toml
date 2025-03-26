@@ -15,3 +15,8 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["scottschreckengaust_test_01"]
+
+[tool.uv]
+dev-dependencies = [
+    "pyright",
+]
