@@ -2,11 +2,7 @@ name: Python
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-  # release:
-  #   types: [published]
 
 jobs:
   detect-packages:
@@ -15,7 +11,6 @@ jobs:
       packages: ${{ steps.find-packages.outputs.packages }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Find Python packages
         id: find-packages
         working-directory: src
@@ -25,6 +20,7 @@ jobs:
 
   build:
     needs: [detect-packages]
+    if: ${{ needs.detect-packages.outputs.packages != '[]' && needs.detect-packages.outputs.packages != '' }}
     strategy:
       matrix:
         package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
@@ -40,6 +36,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version-file: "src/${{ matrix.package }}/.python-version"
+          cache: uv
 
       - name: Install dependencies
         working-directory: src/${{ matrix.package }}
@@ -58,27 +55,3 @@ jobs:
         with:
           name: dist-${{ matrix.package }}
           path: src/${{ matrix.package }}/dist/
-
-  # publish:
-  #   runs-on: ubuntu-latest
-  #   needs: [build, detect-packages]
-  #   if: github.event_name == 'release'
-
-  #   strategy:
-  #     matrix:
-  #       package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
-  #   name: Publish ${{ matrix.package }}
-
-  #   environment: release
-  #   permissions:
-  #     id-token: write # Required for trusted publishing
-
-  #   steps:
-  #     - name: Download artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: dist-${{ matrix.package }}
-  #         path: dist/
-
-  #     - name: Publish package to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
