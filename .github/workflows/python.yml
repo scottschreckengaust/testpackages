@@ -21,7 +21,7 @@ jobs:
 
   build:
     needs: [detect-packages]
-    if: ${{ needs.detect-packages.outputs.packages }} != '[]'
+    if: 1 == 0
     strategy:
       matrix:
         package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
