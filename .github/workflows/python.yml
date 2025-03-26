@@ -19,9 +19,17 @@ jobs:
           echo "packages=$PACKAGES"
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
 
+  debugger:
+    needs: [detet-packages]
+    name: Debug
+    runs-on: ubuntu-latest
+    steps:
+      - name: Value of outputs
+        run: echo "${{ needs.detect-packages.outputs.packages }}"
+
   build:
     needs: [detect-packages]
-    if: '"${{ needs.detect-packages.outputs.packages }}" != "" || "${{ needs.detect-packages.outputs.packages }}" != ""'
+    if: '1 == 0' # || "${{ needs.detect-packages.outputs.packages }}" != "" || "${{ needs.detect-packages.outputs.packages }}" != ""'
     strategy:
       matrix:
         package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
