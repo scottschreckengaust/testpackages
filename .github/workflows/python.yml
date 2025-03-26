@@ -29,7 +29,7 @@ jobs:
 
   build:
     needs: [detect-packages]
-    if: '1 == 0' # || "${{ needs.detect-packages.outputs.packages }}" != "" || "${{ needs.detect-packages.outputs.packages }}" != ""'
+    if: '"${{ needs.detect-packages.outputs.packages }}" != "[]" || "${{ needs.detect-packages.outputs.packages }}" != ""'
     strategy:
       matrix:
         package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
