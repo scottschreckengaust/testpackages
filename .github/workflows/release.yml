@@ -28,7 +28,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Create version name
+      - name: Create release version name
         id: create-version
         run: |
           VERSION=$(uv run --script scripts/release.py generate-version)
@@ -161,7 +161,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: "src/${{ matrix.package }}/.node-version"
           cache: npm
           registry-url: 'https://registry.npmjs.org'
 

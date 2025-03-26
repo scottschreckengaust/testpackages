@@ -19,6 +19,7 @@ from typing import Any, Iterator, NewType, Protocol
 
 
 Version = NewType("Version", str)
+Patch = NewType("Patch", str)
 GitHash = NewType("GitHash", str)
 
 
@@ -56,7 +57,9 @@ class Package(Protocol):
 
     def package_name(self) -> str: ...
 
-    def update_version(self, version: Version) -> None: ...
+    def package_version(self) -> str: ...
+
+    def update_version(self, patch: Patch) -> str: ...
 
 
 @dataclass
@@ -67,13 +70,20 @@ class NpmPackage:
         with open(self.path / "package.json", "r") as f:
             return json.load(f)["name"]
 
-    def update_version(self, version: Version):
+    def package_version(self) -> str:
+        with open(self.path / "package.json", "r") as f:
+            return json.load(f)["version"]
+
+    def update_version(self, patch: Patch) -> str:
         with open(self.path / "package.json", "r+") as f:
             data = json.load(f)
+            major, minor, _ = data["version"].split(".")
+            version = ".".join([major, minor, patch])
             data["version"] = version
             f.seek(0)
             json.dump(data, f, indent=2)
             f.truncate()
+            return version
 
 
 @dataclass
@@ -88,15 +98,26 @@ class PyPiPackage:
                 raise Exception("No name in pyproject.toml project section")
             return str(name)
 
-    def update_version(self, version: Version):
+    def package_version(self) -> str:
+        with open(self.path / "pyproject.toml") as f:
+            toml_data = tomlkit.parse(f.read())
+            version = toml_data.get("project", {}).get("version")
+            if not version:
+                raise Exception("No version in pyproject.toml project section")
+            return str(version)
+
+    def update_version(self, patch: Patch) -> str:
         # Update version in pyproject.toml
         with open(self.path / "pyproject.toml") as f:
             data = tomlkit.parse(f.read())
+            major, minor, _ = data["project"]["version"].split(".")
+            print(f"DEBUG: {major}")
+            version = ".".join([major, minor, patch])
             data["project"]["version"] = version
 
         with open(self.path / "pyproject.toml", "w") as f:
             f.write(tomlkit.dumps(data))
-
+        return version
 
 def has_changes(path: Path, git_hash: GitHash) -> bool:
     """Check if any files changed between current state and git hash"""
@@ -115,11 +136,16 @@ def has_changes(path: Path, git_hash: GitHash) -> bool:
     except subprocess.CalledProcessError:
         return False
 
-
 def gen_version() -> Version:
-    """Generate version based on current date"""
-    now = datetime.datetime.now()
-    return Version(f"{now.year}.{now.month}.{now.day}")
+    """Generate release version based on current time"""
+    now = datetime.datetime.now(datetime.UTC)
+    return Version(f"{now.year}.{now.month}.{gen_patch()}")
+
+def gen_patch() -> Patch:
+    """Generate version based on current UTC timestamp"""
+    now = datetime.datetime.now(datetime.UTC)
+    # return Patch(f"{int(now.timestamp())}")
+    return Patch(f"{now.day:02d}{now.hour:02d}{now.minute:02d}")
 
 
 def find_changed_packages(directory: Path, git_hash: GitHash) -> Iterator[Package]:
@@ -144,11 +170,11 @@ def cli():
 def update_packages(directory: Path, git_hash: GitHash) -> int:
     # Detect package type
     path = directory.resolve(strict=True)
-    version = gen_version()
+    patch = gen_patch()
 
     for package in find_changed_packages(path, git_hash):
         name = package.package_name()
-        package.update_version(version)
+        version = package.update_version(patch)
 
         click.echo(f"{name}@{version}")
 
@@ -163,13 +189,14 @@ def update_packages(directory: Path, git_hash: GitHash) -> int:
 def generate_notes(directory: Path, git_hash: GitHash) -> int:
     # Detect package type
     path = directory.resolve(strict=True)
-    version = gen_version()
+    release = gen_version()
 
-    click.echo(f"# Release : v{version}")
+    click.echo(f"# Release : {release}")
     click.echo("")
     click.echo("## Updated packages")
     for package in find_changed_packages(path, git_hash):
         name = package.package_name()
+        version = package.package_version()
         click.echo(f"- {name}@{version}")
 
     return 0
@@ -192,7 +219,6 @@ def generate_version() -> int:
 def generate_matrix(directory: Path, git_hash: GitHash, pypi: bool, npm: bool) -> int:
     # Detect package type
     path = directory.resolve(strict=True)
-    version = gen_version()
 
     changes = []
     for package in find_changed_packages(path, git_hash):
