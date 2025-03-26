@@ -29,7 +29,7 @@ jobs:
 
   debugger2:
     needs: [debugger1, detect-packages]
-    if: ${{ needs.detect-packages.outputs.packages }} == '[]'
+    if: ${{ needs.detect-packages.outputs.packages }} != '[]'
     name: Debug2
     runs-on: ubuntu-latest
     steps:
