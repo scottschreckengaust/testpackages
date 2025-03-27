@@ -36,6 +36,7 @@ jobs:
         with:
           node-version-file: "src/${{ matrix.package }}/.node-version"
           cache: npm
+          cache-dependency-path: "src/${{ matrix.package }}/"
 
       - name: Install dependencies
         working-directory: src/${{ matrix.package }}
