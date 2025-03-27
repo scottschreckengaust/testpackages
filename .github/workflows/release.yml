@@ -206,7 +206,7 @@ jobs:
 
   create-release:
     needs: [update-packages, create-metadata, publish-pypi, publish-npm]
-    if: ${{ needs.update-packages.outputs.changes_made == 'true' && ( needs.publish-npm.result == 'success' || needs.publish-pypi.result == 'success') }}
+    if: ${{ needs.update-packages.outputs.changes_made == 'true' && !failure() && !cancelled() && ( needs.publish-npm.result == 'success' || needs.publish-pypi.result == 'success') }}
     runs-on: ubuntu-latest
     environment: release
     permissions:
