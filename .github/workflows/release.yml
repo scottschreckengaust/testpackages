@@ -35,18 +35,6 @@ jobs:
           echo "version $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # - name: Create notes
-      #   run: |
-      #     HASH="${{ steps.last-release.outputs.hash }}"
-      #     uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
-      #     cat RELEASE_NOTES.md
-
-      # - name: Release notes
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: release-notes
-      #     path: RELEASE_NOTES.md
-
       - name: Create python matrix
         id: create-pypi-packages
         run: |
@@ -227,7 +215,7 @@ jobs:
             --generate-notes \
             --draft \
             --verify-tag
-          gh release view "$VERSION" --json body | jq '.body' > GENERATED_NOTES.md 
+          gh release view "$VERSION" --json body | jq -r '.body' > GENERATED_NOTES.md 
           cat RELEASE_NOTES.md GENERATED_NOTES.md | gh release edit "$VERSION" \
             --draft=false \
             --notes-file -
