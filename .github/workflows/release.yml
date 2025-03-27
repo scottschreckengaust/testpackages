@@ -98,7 +98,8 @@ jobs:
           else
             git commit -m 'Automatic update of packages'
             git tag -a "$VERSION" -m "Release $VERSION"
-            git push origin "$VERSION"
+            git push origin tag "$VERSION"
+            git push origin main
             echo "changes_made=true" >> $GITHUB_OUTPUT
           fi
           
@@ -236,6 +237,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
         run: |
           VERSION="${{ needs.create-metadata.outputs.version }}"
+          gh release create "$VERSION" \
+            --
           gh release create "$VERSION" \
             --title "Release $VERSION" \
             --notes-file RELEASE_NOTES.md
