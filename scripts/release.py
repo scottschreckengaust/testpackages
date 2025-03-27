@@ -191,7 +191,7 @@ def generate_notes(directory: Path, git_hash: GitHash) -> int:
     path = directory.resolve(strict=True)
     release = gen_version()
 
-    click.echo(f"# Release : {release}")
+    click.echo(f"# Release: {release}")
     click.echo("")
     click.echo("## Updated packages")
     for package in find_changed_packages(path, git_hash):
