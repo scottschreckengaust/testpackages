@@ -198,7 +198,8 @@ def generate_notes(directory: Path, git_hash: GitHash) -> int:
         name = package.package_name()
         version = package.package_version()
         click.echo(f"- {name}@{version}")
-
+    click.echo("")
+    
     return 0
 
 
