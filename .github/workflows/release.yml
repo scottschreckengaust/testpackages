@@ -97,9 +97,9 @@ jobs:
             echo "changes_made=false" >> $GITHUB_OUTPUT
           else
             git commit -m 'Automatic update of packages'
+            git push
             git tag -a "$VERSION" -m "Release $VERSION"
             git push origin tag "$VERSION"
-            git push origin main
             echo "changes_made=true" >> $GITHUB_OUTPUT
           fi
           
