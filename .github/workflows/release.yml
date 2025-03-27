@@ -35,17 +35,17 @@ jobs:
           echo "version $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create notes
-        run: |
-          HASH="${{ steps.last-release.outputs.hash }}"
-          uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
-          cat RELEASE_NOTES.md
+      # - name: Create notes
+      #   run: |
+      #     HASH="${{ steps.last-release.outputs.hash }}"
+      #     uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
+      #     cat RELEASE_NOTES.md
 
-      - name: Release notes
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-notes
-          path: RELEASE_NOTES.md
+      # - name: Release notes
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: release-notes
+      #     path: RELEASE_NOTES.md
 
       - name: Create python matrix
         id: create-pypi-packages
@@ -97,10 +97,23 @@ jobs:
             echo "changes_made=false" >> $GITHUB_OUTPUT
           else
             git commit -m 'Automatic update of packages'
+            git push
             git tag -a "$VERSION" -m "Release $VERSION"
-            git push origin "$VERSION"
+            git push origin tag "$VERSION"
             echo "changes_made=true" >> $GITHUB_OUTPUT
           fi
+          
+      - name: Create notes
+        run: |
+          HASH="${{ needs.create-metadata.outputs.hash }}"
+          uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
+      - name: Release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md
 
   publish-pypi:
     needs: [update-packages, create-metadata]
@@ -192,7 +205,7 @@ jobs:
 
   create-release:
     needs: [update-packages, create-metadata, publish-pypi, publish-npm]
-    if: ${{ needs.update-packages.outputs.changes_made == 'true' }}
+    if: ${{ needs.update-packages.outputs.changes_made == 'true' && !failure() && !cancelled() && ( needs.publish-npm.result == 'success' || needs.publish-pypi.result == 'success') }}
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -211,5 +224,10 @@ jobs:
         run: |
           VERSION="${{ needs.create-metadata.outputs.version }}"
           gh release create "$VERSION" \
-            --title "Release $VERSION" \
-            --notes-file RELEASE_NOTES.md
+            --generate-notes \
+            --draft \
+            --verify-tag
+          gh release view "$VERSION" --json body | jq '.body' > GENERATED_NOTES.md 
+          cat RELEASE_NOTES.md GENERATED_NOTES.md | gh release edit "$VERSION" \
+            --draft=false \
+            --notes-file -
