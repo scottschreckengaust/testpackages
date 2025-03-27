@@ -203,20 +203,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-
-  debug:
-    needs: [update-packages,publish-pypi, publish-npm]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: changes
-        run: echo ${{ needs.update-packages.outputs.changes_made }}
-      - name: npm
-        run: echo ${{ needs.publish-npm.result }}
-      - name: python
-        run: echo ${{ needs.publish-pypi.result }}
-
-
   create-release:
     needs: [update-packages, create-metadata, publish-pypi, publish-npm]
     if: ${{ needs.update-packages.outputs.changes_made == 'true' && !failure() && !cancelled() && ( needs.publish-npm.result == 'success' || needs.publish-pypi.result == 'success') }}
