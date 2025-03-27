@@ -35,17 +35,17 @@ jobs:
           echo "version $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create notes
-        run: |
-          HASH="${{ steps.last-release.outputs.hash }}"
-          uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
-          cat RELEASE_NOTES.md
+      # - name: Create notes
+      #   run: |
+      #     HASH="${{ steps.last-release.outputs.hash }}"
+      #     uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
+      #     cat RELEASE_NOTES.md
 
-      - name: Release notes
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-notes
-          path: RELEASE_NOTES.md
+      # - name: Release notes
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: release-notes
+      #     path: RELEASE_NOTES.md
 
       - name: Create python matrix
         id: create-pypi-packages
@@ -101,6 +101,18 @@ jobs:
             git push origin "$VERSION"
             echo "changes_made=true" >> $GITHUB_OUTPUT
           fi
+          
+      - name: Create notes
+        run: |
+          HASH="${{ needs.create-metadata.outputs.hash }}"
+          uv run --script scripts/release.py generate-notes --directory src/ $HASH > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
+      - name: Release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md
 
   publish-pypi:
     needs: [update-packages, create-metadata]
