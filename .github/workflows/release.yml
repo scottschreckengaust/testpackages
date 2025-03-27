@@ -226,7 +226,7 @@ jobs:
           gh release create "$VERSION" \
             --generate-notes \
             --draft \
-            --verify-tag \
+            --verify-tag
           gh release view "$VERSION" --json body | jq '.body' > GENERATED_NOTES.md 
           cat RELEASE_NOTES.md GENERATED_NOTES.md | gh release edit "$VERSION" \
             --draft=false \
