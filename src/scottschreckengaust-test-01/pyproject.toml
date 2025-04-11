@@ -1,6 +1,6 @@
 [project]
 name = "scottschreckengaust-test-01"
-version = "0.2.0+2025112312"
+version = "0.2.99999999999999999999"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
